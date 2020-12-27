@@ -1,0 +1,1083 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+</head>
+<style>* {
+        padding: 0;
+        margin: 0;
+        box-sizing: border-box;
+
+    }
+
+    .fixed {
+        position: fixed !important;
+        z-index: 999;
+    }
+
+    .table_box {
+        position: relative;
+        /* margin: 50px; */
+    }
+
+    #table table {
+        font-size: 13px;
+        position: relative;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+    }
+
+    #table table th {
+        border-bottom: 1px solid #c7c7c7;
+        border-left: 1px solid #c7c7c7;
+        font-weight: 400;
+    }
+
+    #table table td {
+        border-bottom: 1px solid #c7c7c7;
+        border-left: 1px solid #c7c7c7;
+    }
+
+    #table td {
+        padding: 10px;
+        position: relative;
+    }
+
+    .table_cell {}
+
+    .table_active {
+        top: 0;
+        right: 0;
+        left: 0;
+        bottom: 0;
+        position: absolute;
+        border: 2px solid #439e71;
+        box-sizing: border-box;
+    }
+
+    .cell_background {
+        background-color: rgba(185, 185, 185, 0.3);
+    }
+
+    .cell_border_top,
+    .cell_border_bottom,
+    .cell_border_left,
+    .cell_border_right,
+    .cp_data_border_top,
+    .cp_data_border_bottom,
+    .cp_data_border_left,
+    .cp_data_border_right {
+        top: 0;
+        right: 0;
+        left: 0;
+        bottom: 0;
+        position: absolute;
+        box-sizing: border-box;
+    }
+
+    /* 选框 */
+    .cell_border_top {
+        border-top: 2px solid #439e71;
+    }
+
+    .cell_border_bottom {
+        border-bottom: 2px solid #439e71;
+    }
+
+    .cell_border_left {
+        border-left: 2px solid #439e71;
+    }
+
+    .cell_border_right {
+        border-right: 2px solid #439e71;
+    }
+
+    /* 复制 */
+    .cp_data_border_top {
+        border-top: 2px dotted #999;
+    }
+
+    .cp_data_border_bottom {
+        border-bottom: 2px dotted #999;
+    }
+
+    .cp_data_border_left {
+        border-left: 2px dotted #999;
+    }
+
+    .cp_data_border_right {
+        border-right: 2px dotted #999;
+    }
+
+    .table_active span {
+        position: absolute;
+        right: -5px;
+        bottom: -5px;
+        width: 8px;
+        height: 8px;
+        background: #439e71;
+        z-index: 998;
+        cursor: crosshair;
+    }
+
+    .table_row_cursor {
+        cursor: pointer;
+        background-color: #f0f0f0;
+        font-size: 13px;
+        color: #222222;
+    }
+
+    .table_col_cursor:hover {
+        cursor: pointer;
+    }
+
+    .table_head_col,
+    .table_head_row {
+        background-color: #c7c7c7 !important;
+        color: #439e71;
+        position: relative;
+    }
+
+    .table_head_col::after {
+        display: block;
+        content: '';
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0px;
+        height: 4px;
+        background-color: #439e71;
+    }
+
+    .table_head_row:after {
+        display: block;
+        content: '';
+        position: absolute;
+        right: 0px;
+        top: 0;
+        bottom: 0px;
+        width: 4px;
+        background-color: #439e71;
+    }
+
+    .table_textarea {
+        position: absolute;
+        outline: none;
+        resize: none;
+        word-wrap: normal;
+        overflow: hidden;
+        z-index: 998;
+    }
+
+    .active_mousedown {
+        border-top: 2px solid #439e71;
+        border-left: 2px solid #439e71;
+        border-right: 2px solid #439e71;
+    }
+
+    .active_mouseup {
+        border-bottom: 2px solid #439e71
+    }
+
+    .table_content {
+        max-height: 500px;
+        max-width: 600px;
+        overflow: scroll;
+        position: absolute;
+        top: 0px;
+        /* padding-top: 25px; */
+        /* padding-left: 38px; */
+    }
+
+    .table_row {
+        overflow-x: scroll;
+        position: relative;
+        z-index: 999;
+    }
+
+    .table_col {
+        position: relative;
+        z-index: 998;
+        overflow-y: scroll;
+        padding-bottom: 20px;
+        top: -21px;
+        width: 40px;
+    }
+
+    .table_row::-webkit-scrollbar,
+    .table_col::-webkit-scrollbar {
+        /*滚动条整体样式*/
+        width: 0px;
+        /*高宽分别对应横竖滚动条的尺寸*/
+        height: 0px;
+    }
+
+    .head_col {
+        padding: 0 10px !important;
+        background-color: #f0f0f0;
+    }
+    .table_row  tr th:first-child,
+    .table_content table tr td:first-child{
+        width: 38px !important;
+        min-width: 38px !important;
+        max-width: 38px !important;
+    }
+
+
+    [v-cloak] {
+        display: none;
+    }</style>
+
+<body>
+    <div id="table" v-cloak="">
+        <!-- <input type="text" v-model="create_row" placeholder="行">
+        <input type="text" v-model="create_col" placeholder="列">
+        <button @click="create_table()">绘制表格</button> -->
+        <p>目前问题：dom越多越卡；
+        </p>
+        <p>下一步完善功能：</p>
+        <p>1、拖动复制合并单元格</p>
+        <p>2、拖动可修改行高、列宽</p>
+        <p>3、叠加合并单元格</p>
+        <br>
+        <button @click="insert_row_col('row')">插入行</button>
+        <button @click="insert_row_col('col')">插入列</button>
+        <button @click="del_row_col('row')">删除行</button>
+        <button @click="del_row_col('col')">删除列</button>
+        <button @click="marge_cell()">合并单元格</button>
+        <button @click="cancel_marge_cell()">取消合并</button>
+
+        <div class="table_box">
+            <!-- 表头 -->
+            <div :style="{width:width -17 +'px'}" class="overflow_hidden table_row" ref="table_row">
+                <table cellpadding="30" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <!-- <th class="table_row_cursor" style="min-width:38px;width: 38px;"></th> -->
+                            <th class="table_row_cursor" :class="{table_head_col: head_cell_col===index,
+                                    table_head_col: head_row_list.indexOf(index) > -1
+                                   }" v-for="(item,index) in table_head" @click="head_row_click(index)" style="min-width: 58px;height: 21px;" :style="{minWidth:head_row_width_list[index] + 'px'}">
+                                {{table_head[index-1]}}
+                            </th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+            <!-- 列头 -->
+            <div :style="{height:height - 20 +'px'}" class="overflow_hidden table_col" ref="table_col">
+                <table cellpadding="30" cellspacing="0" style="width: 38px;">
+                    <tbody>
+                        <tr v-for="(item,index) in list">
+                            <td :ref="'col' + index" :style="{height:head_col_height_list[index] + 'px'}" class="table_col_cursor head_col" :class="{
+                                table_head_row:active_list != [] && typeof active_list[index] != 'undefined' || head_col_list.indexOf(index)>-1}" @click="head_col_click(index)">
+                                    <template v-if="index != 0">
+                                        {{index}}
+                                    </template>    
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <!-- 内容 -->
+            <div class="table_content" @scroll="scroll" ref="table_content">
+                <table cellpadding="30" cellspacing="0">
+                    <tbody>
+                       
+                        <tr v-for="(item,index) in list">
+                            <!-- <td style="min-width: 58px;max-height: 21px;" :ref="'cell'+index + '-' + 0">111</td> -->
+                            <!-- <td style="min-width: 58px;max-height: 21px;" :ref="'cell'+index + '-' + 0">222</td> -->
+
+                            <td style="min-width: 58px;max-height: 21px;" :class="{
+                                cell_background:active_list != [] && typeof active_list[index] != 'undefined' && active_list[index].indexOf(index+'-'+i)>-1}" v-for="(items,i) in list[index]" @click="cell_click(index,i)" @dblclick="arouse_textarea(index,i)" @mousedown="cell_mousedown(index,i)" @mousemove="cell_mousemove(index,i)" @mouseup="cell_mouseup(index,i)" :ref="'cell'+index + '-' + i" :rowspan=" marge_cell_obj.hasOwnProperty(index+'-'+i) ? marge_cell_obj[index+'-'+i].rowspan : ''" :colspan=" marge_cell_obj.hasOwnProperty(index+'-'+i) ? marge_cell_obj[index+'-'+i].colspan : ''" v-if="marge_cell_list[index][i] === index+'-'+i ">
+                                <div :class="{table_active:cell_row===index && cell_col === i,
+                                    cell_border_top:active_obj.top.indexOf(index+'-'+i) > -1,
+                                    cell_border_bottom:active_obj.bottom.indexOf(index+'-'+i) > -1,
+                                    cell_border_left:active_obj.left.indexOf(index+'-'+i) > -1 ,
+                                    cell_border_right:active_obj.right.indexOf(index+'-'+i) > -1 ,
+
+                                    cp_data_border_top:copy_data_obj.top.indexOf(index+'-'+i) > -1,
+                                    cp_data_border_bottom:copy_data_obj.bottom.indexOf(index+'-'+i) > -1,
+                                    cp_data_border_left:copy_data_obj.left.indexOf(index+'-'+i) > -1 ,
+                                    cp_data_border_right:copy_data_obj.right.indexOf(index+'-'+i) > -1 ,
+                                    }">
+                                    <span @mousedown.stop="copy_data_mousedown()"></span>
+                                </div>
+                                {{items}}
+                                <!-- {{index}} - {{i}} -->
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <textarea ref="textarea" v-show="textarea_show" v-model="textarea_text" class="table_textarea" @keyup="textarea_input()" :style="{left:textarea_left + 'px',
+                top:textarea_top + 'px',
+                width:textarea_width+'px',
+                height:textarea_height+ 'px',
+                minWidth:textarea_min_width+'px',
+                minHeight:textarea_min_height+'px'}"></textarea>
+            </div>
+            <!-- textarea 双击单元格出现 单击 任意地方消失 -->
+
+        </div>
+    </div>
+</body>
+<script>var vue = new Vue({
+  el: '#table',
+  data: {
+    width: 600,
+    height: 500,
+    create_row: 30,
+    create_col: 20,
+    list: [],
+    // 内容数组
+    marge_cell_list: [],
+    // 内容数组对应的坐标
+    obj: {},
+    //  下标 : 引文大写字母 
+    // table_head: [],
+    // 表头列头
+    head_cell_row: -1,
+    head_cell_col: -1,
+    // 单击单元格
+    cell_row: -1,
+    cell_col: -1,
+    // 按下单元格
+    cell_mousedown_row: -1,
+    cell_mousedown_col: -1,
+    // 弹起单元格
+    cell_mouseup_row: -1,
+    cell_mouseup_col: -1,
+    // 文本域
+    textarea_left: 0,
+    textarea_top: 0,
+    textarea_show: false,
+    textarea_text: '',
+    textarea_row: '',
+    textarea_col: '',
+    textarea_min_height: '',
+    textarea_min_width: '',
+    textarea_width: 0,
+    textarea_height: 0,
+    if_mousedown: false,
+    // 是否按下
+    active_list: [],
+    active_obj: {
+      //选中数组
+      top: [],
+      bottom: [],
+      left: [],
+      right: []
+    },
+    // 合并的对象 坐标: colspan,rowspan
+    marge_cell_obj: {},
+    // 被合并的单元格序号数组 
+    merged_cell: [],
+    // 被合并单元对应的序号 （被几号单元格合并
+    merged_index: [],
+    head_row_list: [],
+    //被选中的头部数组
+    head_row_width_list: [],
+    //表头宽度
+    head_col_list: [],
+    //被选中的头部数组
+    head_col_height_list: [],
+    //列头高度数组
+    // 复制数据
+    if_copy_data: false,
+    // 是否开启
+    if_copy_data_mousedown: false,
+    // 是否是按下状态
+    copy_data_list: [],
+    copy_data_obj: {
+      //选中数组
+      top: [],
+      bottom: [],
+      left: [],
+      right: []
+    }
+  },
+  created: function created() {
+    for (var i = 0; i < 26; i++) {
+      this.obj[i] = String.fromCharCode(i + 65) + '';
+    }
+
+    this.create_table(); // console.log(str.charCodeAt()) 字母转数字
+    // console.log(fromCharCode('str')) 数字转字母
+  },
+  mounted: function mounted() {},
+  methods: {
+    // 复制数据
+    copy_data_mousedown: function copy_data_mousedown(index, i) {
+      this.if_copy_data = true;
+      this.if_copy_data_mousedown = true;
+      this.if_mousedown = false;
+    },
+    // 滚动条
+    scroll: function scroll() {
+      var top = this.$refs.table_content.scrollTop;
+      var left = this.$refs.table_content.scrollLeft;
+      console.log(top, left);
+
+      if (top != this.$refs.table_col.scrollTop) {
+        this.$refs.table_row.style.zIndex = 999;
+        this.$refs.table_col.style.zIndex = 998;
+      } else {
+        this.$refs.table_row.style.zIndex = 998;
+        this.$refs.table_col.style.zIndex = 999;
+      }
+
+      this.$refs.table_col.scrollTop = top;
+      this.$refs.table_row.scrollLeft = left;
+    },
+    // 创建表格
+    create_table: function create_table() {
+      this.list = [];
+      this.head_col_height_list = [];
+      this.head_row_width_list = [];
+
+      for (var row = 0; row < this.create_row; row++) {
+        this.list[row] = [];
+
+        for (var col = 0; col < this.create_col; col++) {
+          this.list[row][col] = '';
+
+          if (row === 0) {
+            this.head_row_width_list.push(58);
+          }
+        }
+
+        this.head_col_height_list.push(21);
+      }
+
+      this.from_Char_Code();
+      this.reset_marge_cell_list();
+    },
+    // 取消合并
+    cancel_marge_cell: function cancel_marge_cell() {
+      if (this.marge_cell_obj.hasOwnProperty(this.cell_row + '-' + this.cell_col)) {
+        for (var row = this.cell_row; row < this.cell_row + this.marge_cell_obj[this.cell_row + '-' + this.cell_col].rowspan; row++) {
+          for (var col = this.cell_col; col < this.cell_col + this.marge_cell_obj[this.cell_row + '-' + this.cell_col].colspan; col++) {
+            this.marge_cell_list[row].splice(col, 1, row + '-' + col);
+          }
+        }
+
+        delete this.marge_cell_obj[this.cell_row + '-' + this.cell_col];
+        this.marge_cell_obj = Object.assign({}, this.marge_cell_obj);
+      }
+
+      this.head_col_height();
+      this.marge_relations();
+    },
+    // 合并单元格
+    marge_cell: function marge_cell() {
+      if (this.marge_cell_obj.hasOwnProperty(this.cell_mousedown_row + '-' + this.cell_mousedown_col)) {
+        return;
+      }
+
+      var s_row = this.cell_mousedown_row <= this.cell_mouseup_row ? this.cell_mousedown_row : this.cell_mouseup_row;
+      var s_col = this.cell_mousedown_col <= this.cell_mouseup_col ? this.cell_mousedown_col : this.cell_mouseup_col;
+      var e_row = this.cell_mousedown_row >= this.cell_mouseup_row ? this.cell_mousedown_row : this.cell_mouseup_row;
+      var e_col = this.cell_mousedown_col >= this.cell_mouseup_col ? this.cell_mousedown_col : this.cell_mouseup_col;
+      var rowspan;
+      var colspan;
+
+      if (s_row === e_row) {
+        rowspan = 1;
+        colspan = e_col - s_col + 1;
+      } else if (s_col === e_col) {
+        colspan = 1;
+        rowspan = e_row - s_row + 1;
+      } else {
+        colspan = e_col - s_col + 1;
+        rowspan = e_row - s_row + 1;
+      }
+
+      Vue.set(this.marge_cell_obj, s_row + '-' + s_col, {
+        row: s_row,
+        col: s_col,
+        rowspan: rowspan,
+        colspan: colspan
+      });
+
+      for (var row = e_row; row >= s_row; row--) {
+        for (var col = e_col; col >= s_col; col--) {
+          var cell = row + '-' + col;
+
+          if (cell != s_row + '-' + s_col) {
+            this.list[row][col] = '';
+          }
+
+          this.marge_cell_list[row][col] = s_row + '-' + s_col;
+        }
+      }
+
+      this.head_col_height();
+      this.reset_border('active_obj');
+      this.marge_relations();
+    },
+    // 删除行、列
+    del_row_col: function del_row_col(type) {
+      if (type === 'row') {
+        if (this.head_cell_row === -1) {
+          return;
+        }
+
+        this.list.splice(this.head_cell_row, 1);
+        this.head_col_height_list.splice(this.head_cell_row, 1);
+      } else {
+        if (this.head_cell_col === -1) {
+          return;
+        }
+
+        for (var key in this.list) {
+          this.list[key].splice(this.head_cell_col, 1);
+        }
+
+        this.head_row_width_list.splice(this.head_cell_col, 1);
+        this.from_Char_Code();
+      }
+
+      this.head_col_height();
+      this.reset_marge_cell_list();
+    },
+    // 插入行、列
+    insert_row_col: function insert_row_col(type) {
+      // 默认上方插入行
+      // 默认左侧插入列
+      if (type === 'row') {
+        var index = this.head_cell_row === -1 ? this.list[0].length : this.head_cell_row + 1;
+        var list = [];
+
+        for (var key in this.list[0]) {
+          list[key] = '';
+        }
+
+        this.list.splice(index - 1, 0, list);
+        this.head_col_height_list.splice(index - 1, 0, 21);
+      } else {
+        var _index = this.head_cell_col === -1 ? this.list[0].length : this.head_cell_col + 1;
+
+        for (var _key in this.list) {
+          this.list[_key].splice(_index - 1, 0, '');
+        }
+
+        this.head_row_width_list.splice(_index - 1, 0, 58);
+        this.from_Char_Code();
+      }
+
+      this.reset_marge_cell_list();
+    },
+    // 选择列头 123456
+    head_col_click: function head_col_click(row) {
+      this.head_cell_row = row;
+      this.head_row_list = [];
+      this.active_list = [];
+      this.active_list[row] = [];
+
+      for (var c = 1; c <= this.list[row].length - 1; c++) {
+        this.active_list[row].push(row + '-' + c);
+        this.head_row_list.push(c);
+      }
+
+      this.head_cell_col = -1;
+      this.cell_row = -1;
+      this.cell_col = -1;
+      this.textarea_show = false;
+      this.stroke();
+    },
+    // 选择表头ABCDE
+    head_row_click: function head_row_click(col) {
+      this.head_cell_col = col;
+      this.active_list = [];
+
+      for (var r = 1; r <= this.list.length - 1; r++) {
+        this.active_list[r] = [];
+        this.active_list[r][col] = r + '-' + col;
+      }
+
+      this.head_cell_row = -1;
+      this.cell_row = -1;
+      this.cell_col = -1;
+      this.textarea_show = false;
+      this.head_row_list = [col];
+      this.stroke();
+    },
+    // 选择单元格
+    cell_click: function cell_click(row, col) {
+      if (this.textarea_show) {
+        this.list[this.textarea_row][this.textarea_col] = this.textarea_text;
+        this.head_col_height();
+        this.textarea_show = false;
+        return;
+      }
+
+      this.active_list = [];
+      this.active_list[row] = [];
+      this.active_list[row][col] = row + '-' + col;
+      this.head_row_list = [col];
+      this.head_col_list = [];
+      this.cell_row = row;
+      this.cell_col = col;
+      this.head_cell_col = -1;
+      this.head_cell_row = -1;
+
+      if (this.marge_cell_obj.hasOwnProperty(row + '-' + col)) {
+        var rowspan = this.marge_cell_obj[row + '-' + col].rowspan;
+        var colspan = this.marge_cell_obj[row + '-' + col].colspan;
+
+        for (var r = row; r <= rowspan + row - 1; r++) {
+          for (var c = col; c <= colspan + col - 1; c++) {
+            this.head_row_list.push(c);
+          }
+
+          this.head_col_list.push(r);
+        }
+      } else {
+        this.head_row_list = [col];
+      }
+    },
+    // 双击单元格
+    arouse_textarea: function arouse_textarea(row, col) {
+      var _this = this;
+
+      this.cell_click(row, col);
+      this.textarea_row = row;
+      this.textarea_col = col;
+      var dom_name = 'cell' + this.textarea_row + '-' + this.textarea_col;
+      var $dom = this.$refs[dom_name][0];
+      this.textarea_min_height = $dom.offsetHeight;
+      this.textarea_min_width = $dom.offsetWidth;
+      this.textarea_width = $dom.offsetWidth;
+      this.textarea_height = $dom.offsetHeight;
+      this.textarea_left = $dom.offsetLeft;
+      this.textarea_top = $dom.offsetTop;
+      this.textarea_text = this.list[this.textarea_row][this.textarea_col];
+      this.textarea_show = true;
+      this.$nextTick(function () {
+        _this.$refs.textarea.focus();
+      });
+    },
+    textarea_input: function textarea_input() {
+      var width = this.textarea_text.replace(/[\u0391-\uFFE5]/g, "aa").length * 7.2;
+
+      if (width > this.textarea_min_width) {
+        this.textarea_width = width;
+      }
+    },
+    // 鼠标按下单元格
+    cell_mousedown: function cell_mousedown(row, col) {
+      this.cell_mousedown_row = row;
+      this.cell_mousedown_col = col;
+      this.cell_mouseup_row = -1;
+      this.cell_mouseup_col = -1;
+      this.cell_row = -1;
+      this.cell_col = -1;
+      this.head_cell_col = -1;
+      this.head_cell_row = -1;
+      this.if_mousedown = true;
+      var cell = row + '-' + col;
+      this.active_list = [];
+      this.active_list[row] = [];
+      this.active_list[row][col] = cell;
+      this.head_row_list = [];
+
+      if (this.marge_cell_obj.hasOwnProperty(this.cell_mousedown_row + '-' + this.cell_mousedown_col)) {
+        var rowspan = this.marge_cell_obj[this.cell_mousedown_row + '-' + this.cell_mousedown_col].rowspan;
+        var colspan = this.marge_cell_obj[this.cell_mousedown_row + '-' + this.cell_mousedown_col].colspan;
+
+        for (var r = row; r <= rowspan + row - 1; r++) {
+          this.active_list[r] = [];
+
+          for (var c = col; c <= colspan + col - 1; c++) {
+            this.active_list[r][c] = cell;
+            this.head_row_list.push(c);
+          }
+        }
+      } else {
+        this.head_row_list = [col];
+      }
+
+      this.reset_border('active_obj');
+    },
+    // 鼠标移动单元格 (必须优化)
+    cell_mousemove: function cell_mousemove(row, col) {
+      // 复制数据 可以优化
+      if (this.if_copy_data) {
+        if (this.if_copy_data_mousedown) {
+          this.copy_data_list = []; // 优先左右 再上下
+          // 5列之内 左右选中  5列之后 上下选中
+
+          if (row > this.cell_mousedown_row && col === this.cell_mousedown_col) {
+            // 往下
+            for (var r = this.cell_mousedown_row; r <= row; r++) {
+              this.copy_data_list[r] = [];
+              this.copy_data_list[r][this.cell_mousedown_col] = r + '-' + this.cell_mousedown_col;
+            }
+          }
+
+          if (row < this.cell_mousedown_row && col === this.cell_mousedown_col) {
+            // 往上
+            for (var _r = row; _r <= this.cell_mousedown_row; _r++) {
+              this.copy_data_list[_r] = [];
+              this.copy_data_list[_r][this.cell_mousedown_col] = _r + '-' + this.cell_mousedown_col;
+            }
+          }
+
+          if (row === this.cell_mousedown_row && col > this.cell_mousedown_col) {
+            // 往右
+            this.copy_data_list[row] = [];
+
+            for (var c = this.cell_mousedown_col; c <= col; c++) {
+              this.copy_data_list[this.cell_mousedown_row][c] = this.cell_mousedown_row + '-' + c;
+            }
+          }
+
+          if (row === this.cell_mousedown_row && col < this.cell_mousedown_col) {
+            // 往左
+            this.copy_data_list[row] = [];
+
+            for (var _c = col; _c <= this.cell_mousedown_col; _c++) {
+              this.copy_data_list[this.cell_mousedown_row][_c] = this.cell_mousedown_row + '-' + _c;
+            }
+          }
+
+          this.stroke(row, col);
+        }
+      } // 拖动单元格
+
+
+      if (this.if_mousedown) {
+        if (typeof this.active_list[row] === 'undefined') {
+          this.active_list[row] = [];
+        }
+
+        this.active_list = [];
+        var front_row = this.cell_mousedown_row < row ? this.cell_mousedown_row : row;
+        var after_row = this.cell_mousedown_row > row ? this.cell_mousedown_row : row;
+        var front_col = this.cell_mousedown_col < col ? this.cell_mousedown_col : col;
+        var after_col = this.cell_mousedown_col > col ? this.cell_mousedown_col : col;
+
+        for (var r_index = front_row; r_index <= after_row; r_index++) {
+          this.active_list[r_index] = [];
+
+          for (var c_index = front_col; c_index <= after_col; c_index++) {
+            this.active_list[r_index][c_index] = r_index + '-' + c_index;
+          }
+        }
+
+        for (var _r_index = front_row; _r_index <= this.active_list.length - 1; _r_index++) {
+          for (var _c_index = front_col; _c_index <= after_col; _c_index++) {
+            if (this.merged_cell.indexOf(_r_index + '-' + _c_index) > -1) {
+              var cell = this.merged_index[this.merged_cell.indexOf(_r_index + '-' + _c_index)];
+              var rowspan = this.marge_cell_obj[cell].rowspan;
+              var colspan = this.marge_cell_obj[cell].colspan;
+              var _row = this.marge_cell_obj[cell].row;
+              var _col = this.marge_cell_obj[cell].col; // 合并格右下角
+
+              var marge_row = _row + rowspan - 1;
+              var marge_col = _col + colspan - 1;
+
+              for (var _r2 = _row; _r2 <= marge_row; _r2++) {
+                if (typeof this.active_list[_r2] === 'undefined') {
+                  this.active_list[_r2] = [];
+                }
+
+                for (var _c2 = _col; _c2 <= marge_col; _c2++) {
+                  this.active_list[_r2][_c2] = cell;
+                }
+              }
+            }
+
+            if (this.merged_cell.length != 0 && this.merged_cell.indexOf(_r_index + '-' + _c_index) > -1) {
+              this.active_list[_r_index][_c_index] = this.merged_index[this.merged_cell.indexOf(_r_index + '-' + _c_index)];
+            }
+          }
+        }
+
+        this.inspect_cell_list(front_row, front_col);
+        this.stroke();
+      }
+    },
+    // 鼠标抬起单元格
+    cell_mouseup: function cell_mouseup(row, col) {
+      this.cell_mouseup_row = row;
+      this.cell_mouseup_col = col;
+      this.if_mousedown = false;
+
+      if (this.if_copy_data && this.if_copy_data_mousedown) {
+        if (typeof this.copy_data_list[this.copy_data_list.length - 2] !== 'undefined') {
+          var s_row = row <= this.cell_mousedown_row ? row : this.cell_mousedown_row;
+          var e_row = row >= this.cell_mousedown_row ? row : this.cell_mousedown_row;
+
+          for (; s_row <= e_row; s_row++) {
+            this.list[s_row][this.cell_mousedown_col] = this.list[this.cell_mousedown_row][this.cell_mousedown_col];
+          }
+        } else {
+          var s_col = col <= this.cell_mousedown_col ? col : this.cell_mousedown_col;
+          var e_col = col >= this.cell_mousedown_col ? col : this.cell_mousedown_col;
+
+          for (; s_col <= e_col; s_col++) {
+            this.list[this.cell_mousedown_row][s_col] = this.list[this.cell_mousedown_row][this.cell_mousedown_col];
+          }
+        }
+
+        this.head_col_height();
+        this.if_copy_data = false;
+        this.if_copy_data_mousedown = false;
+      }
+
+      this.reset_border('copy_data_obj');
+    },
+    // 计算边框
+    stroke: function stroke(current_row, current_col) {
+      if (this.if_copy_data && this.if_copy_data_mousedown) {
+        this.reset_border('copy_data_obj');
+
+        if (typeof this.copy_data_list[this.copy_data_list.length - 2] !== 'undefined') {
+          // 上下拉
+          var s_row = current_row <= this.cell_mousedown_row ? current_row : this.cell_mousedown_row;
+          var e_row = current_row >= this.cell_mousedown_row ? current_row : this.cell_mousedown_row;
+          this.copy_data_obj.top.push(s_row + '-' + this.cell_mousedown_col);
+
+          for (; s_row <= e_row; s_row++) {
+            this.copy_data_obj.left.push(s_row + '-' + this.cell_mousedown_col);
+            this.copy_data_obj.right.push(s_row + '-' + this.cell_mousedown_col);
+          }
+
+          this.copy_data_obj.bottom.push(e_row + '-' + this.cell_mousedown_col);
+        } else {
+          // 左右拉
+          var s_col = current_col <= this.cell_mousedown_col ? current_col : this.cell_mousedown_col;
+          var e_col = current_col >= this.cell_mousedown_col ? current_col : this.cell_mousedown_col;
+          this.copy_data_obj.left.push(this.cell_mousedown_row + '-' + s_col);
+
+          for (; s_col <= e_col; s_col++) {
+            this.copy_data_obj.top.push(this.cell_mousedown_row + '-' + s_col);
+            this.copy_data_obj.bottom.push(this.cell_mousedown_row + '-' + s_col);
+          }
+
+          this.copy_data_obj.right.push(this.cell_mousedown_row + '-' + e_col);
+        }
+
+        return;
+      }
+
+      this.reset_border('active_obj');
+      var row_flag = true;
+      var col_flag = true;
+      var row_index = 0;
+      var col_index = 0;
+
+      for (var row = 0; row < this.active_list.length; row++) {
+        if (typeof this.active_list[row] !== 'undefined') {
+          if (row_flag) {
+            // 第一个不为空的 (empty) 数组的下标
+            row_index = row;
+            row_flag = false;
+          }
+
+          for (var col = 0; col < this.active_list[row].length; col++) {
+            if (typeof this.active_list[row][col] !== 'undefined') {
+              if (col_flag) {
+                // 第一个不为空的 (empty) 数组的下标
+                col_index = col;
+                col_flag = false;
+              }
+
+              this.active_obj.top.push(this.active_list[row_index][col]);
+              this.active_obj.bottom.push(this.active_list[this.active_list.length - 1][col]);
+            }
+          }
+
+          this.active_obj.left.push(this.active_list[row][col_index]);
+          this.active_obj.right.push(this.active_list[row][this.active_list[row].length - 1]);
+        }
+      }
+    },
+    // 计算表头字母
+    from_Char_Code: function from_Char_Code() {
+      var list_length = this.list[0].length; // 数组长度
+
+      var multiple = parseInt(list_length / 26); //倍数
+
+      var remainder = list_length % 26; // 余数
+      // number: 倍数
+      // number2:余数
+
+      var headTest = []; // 计算倍数 每一倍26个
+
+      for (var i = 0; i < multiple; i++) {
+        if (i == 0) {
+          // 第一倍 不需要拼接 直接输出字母A~Z
+          for (var key in this.obj) {
+            headTest.push(this.obj[key]);
+          }
+        } else {
+          // N倍 输出 当前字母 + A~Z
+          for (var _key2 in this.obj) {
+            headTest.push(this.obj[i - 1] + this.obj[_key2]);
+          }
+        }
+      } // 计算余数
+
+
+      for (var _i = 0; _i < remainder; _i++) {
+        if (multiple === 0) {
+          // 如果长度不足 26 直接输出 A ~ 长度的字母
+          headTest.push(this.obj[_i]);
+        } else {
+          headTest.push(this.obj[multiple - 1] + this.obj[_i]);
+        }
+      }
+
+      this.table_head = headTest;
+      return headTest;
+    },
+    // 重置边框
+    reset_border: function reset_border(name) {
+      return this[name] = {
+        //选中数组
+        top: [],
+        bottom: [],
+        left: [],
+        right: []
+      };
+    },
+    // 重新计算 坐标
+    reset_marge_cell_list: function reset_marge_cell_list() {
+      this.marge_cell_list = [];
+
+      for (var key in this.list) {
+        this.marge_cell_list[key] = [];
+
+        for (var k in this.list[key]) {
+          this.marge_cell_list[key][k] = key + '-' + k;
+        }
+      }
+
+      for (var _key3 in this.marge_cell_obj) {
+        var r_index = this.marge_cell_obj[_key3].row;
+        var c_index = this.marge_cell_obj[_key3].col;
+        var rowspan = this.marge_cell_obj[_key3].rowspan;
+        var colspan = this.marge_cell_obj[_key3].colspan; // // 合并格右下角
+
+        var marge_row = r_index + rowspan - 1;
+        var marge_col = c_index + colspan - 1;
+
+        for (var r = r_index; r <= marge_row; r++) {
+          for (var c = c_index; c <= marge_col; c++) {
+            this.marge_cell_list[r][c] = _key3;
+          }
+        }
+      }
+
+      return this.marge_cell_list;
+    },
+    // 检查数组，进行补全
+    inspect_cell_list: function inspect_cell_list(s_row, s_col) {
+      // if (this.active_list.length <= 2) {
+      //     return
+      // }
+      var star_col = s_col; //起始col
+
+      var star_row = 0; // 重新计算起始行
+
+      for (var row = this.active_list.length - 1; row >= 0; row--) {
+        if (typeof this.active_list[row] === 'undefined') {
+          star_row = row + 1;
+          break;
+        }
+      } // 存在合并单元格后 第一个col的下标会改变 所以重新计算
+
+
+      var maxcol = 0; //最长列数
+
+      for (var _row2 = star_row; _row2 <= this.active_list.length - 1; _row2++) {
+        if (this.active_list[_row2].length > maxcol) {
+          maxcol = this.active_list[_row2].length;
+        }
+
+        if (typeof this.active_list[_row2][star_col - 1] === 'undefined') {
+          continue;
+        } else {
+          star_col = star_col - 1;
+          continue;
+        }
+      } // 数组填空 && 选中的列数
+
+
+      for (var _row3 = star_row; _row3 <= this.active_list.length - 1; _row3++) {
+        for (var col = star_col; col <= maxcol - 1; col++) {
+          if (typeof this.active_list[_row3][col] === 'undefined') {
+            this.active_list[_row3][col] = _row3 + '-' + col;
+          }
+        }
+      }
+
+      for (var _row4 = this.active_list.length - 1; _row4 >= 0; _row4--) {
+        if (typeof this.active_list[_row4] === 'undefined') {
+          break;
+        }
+
+        for (var _col2 = this.active_list[_row4].length - 1; _col2 >= 0; _col2--) {
+          if (typeof this.active_list[_row4][_col2] != 'undefined' && this.head_row_list.indexOf(_col2) === -1) {
+            this.head_row_list.push(_col2);
+          }
+        }
+      }
+
+      console.log(this.head_row_list);
+    },
+    // 计算合并关系
+    marge_relations: function marge_relations() {
+      this.merged_cell = [];
+      this.merged_index = [];
+
+      for (var key in this.marge_cell_obj) {
+        var r_index = this.marge_cell_obj[key].row;
+        var c_index = this.marge_cell_obj[key].col;
+        var rowspan = this.marge_cell_obj[key].rowspan;
+        var colspan = this.marge_cell_obj[key].colspan; // // 合并格右下角
+
+        var marge_row = r_index + rowspan - 1;
+        var marge_col = c_index + colspan - 1;
+
+        for (var r = r_index; r <= marge_row; r++) {
+          for (var c = c_index; c <= marge_col; c++) {
+            this.merged_cell.push(r + '-' + c);
+            this.merged_index.push(r_index + '-' + c_index);
+          }
+        }
+      }
+    },
+    // 重新计算全部高度 宽度 (可优化)
+    head_col_height: function head_col_height() {
+      var _this2 = this;
+
+      setTimeout(function () {
+        _this2.head_col_height_list = [];
+
+        for (var row = 0; row <= _this2.list.length - 1; row++) {
+          var height = _this2.$refs['cell' + row + '-' + 0][0].offsetHeight;
+
+          _this2.head_col_height_list.push(height);
+        }
+
+        _this2.head_row_width_list = [];
+
+        for (var col = 0; col <= _this2.list[0].length - 1; col++) {
+          var width = _this2.$refs['cell' + 0 + '-' + col][0].offsetWidth;
+
+          _this2.head_row_width_list.push(width);
+        }
+      }, 0);
+    }
+  }
+});</script>
+
+</html>
